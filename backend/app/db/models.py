@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Integer, Text, ForeignKey, TIMESTAMP, Float,Date
+from sqlalchemy import Column, String, Integer, Text, ForeignKey, TIMESTAMP, Float,Date
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 import uuid
@@ -114,6 +115,11 @@ class SummarizeHistory(Base):
     def __repr__(self):
         return f"<SummarizeHistory(id={self.id}, slack_user_id={self.slack_user_id}, summary='{self.summary}', created_at={self.created_at})>"
 
+    slack_user_info = relationship("SlackUserInfo", back_populates="summarize_histories")
+
+    def __repr__(self):
+        return f"<SummarizeHistory(id={self.id}, slack_user_id={self.slack_user_id}, summary='{self.summary}', created_at={self.created_at})>"
+
 class AdvicesHistory(Base):
     __tablename__ = 'advices_history'
 
@@ -123,6 +129,11 @@ class AdvicesHistory(Base):
     slack_user_id = Column(String(100), ForeignKey('slack_user_info.id'), nullable=False)
     advices = Column(String, nullable=False)
     created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+
+    slack_user_info = relationship("SlackUserInfo", back_populates="advices_histories")
+    def __repr__(self):
+        return f"<AdvicesHistory(id={self.id}, slack_user_id={self.slack_user_id}, advices='{self.advices}', created_at={self.created_at})>"
+
 
     slack_user_info = relationship("SlackUserInfo", back_populates="advices_histories")
     def __repr__(self):
@@ -163,6 +174,20 @@ class UserResponse(Base):
 
     employee = relationship("Employee", back_populates="responses")
     question = relationship("Question", back_populates="responses")
+
+# 分析後のアンケート結果をDB保存しておくテーブル
+class AnalysisResult(Base):
+    __tablename__ = 'analysis_result'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    slack_user_id = Column(String, ForeignKey('slack_user_info.id'), nullable=False)
+    result = Column(Text, nullable=False)
+    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+
+    slack_user_info = relationship("SlackUserInfo", back_populates="analysis_results")
+
+    def __repr__(self):
+        return f"<AnalysisResult(id={self.id}, slack_user_id={self.slack_user_id}, result={self.result}, save_date={self.save_date})>"
 
 # 分析後のアンケート結果をDB保存しておくテーブル
 class AnalysisResult(Base):
