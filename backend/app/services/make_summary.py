@@ -73,8 +73,8 @@ def make_summarize_report(slack_user_id: str, start_date: date, end_date: date):
                 }
             ],
             model="gpt-4o-mini",
-            max_tokens=1000,
-            temperature=0.5
+            max_tokens=5000,
+            temperature=0.0000001 #ここは色々といじって試す必要あり！
         )
 
         summary = response.choices[0].message.content.strip()
@@ -87,7 +87,8 @@ def make_summarize_report(slack_user_id: str, start_date: date, end_date: date):
 
 # sayokoさん: 以下のコメントアウトを解除して、コンテナでこのファイルの実行をお願いします
 # slack_user_id = "U07F8NPV1RQ" #meme
-# start_date = date(2024, 7, 1)
-# end_date = date(2024, 8, 30)
-# summary = make_summarize_report(slack_user_id, start_date, end_date)
-# print(summary)
+slack_user_id = 'sample_2'
+start_date = date(2024, 7, 1)
+end_date = date(2024, 8, 30)
+summary = make_summarize_report(slack_user_id, start_date, end_date)
+print(summary)
