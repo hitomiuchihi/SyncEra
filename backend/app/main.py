@@ -208,7 +208,7 @@ async def handle_slack_interactions(request: Request, db: Session = Depends(get_
 
             logger.info(f"Next question sent to user {user_id}")
 
-        return Response(status_code=200)
+        return UserResponse(status_code=200)
 
     except Exception as e:
         logger.error(f"Error processing request: {e}")
