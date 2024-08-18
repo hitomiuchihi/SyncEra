@@ -1,27 +1,46 @@
 // hooks/useOneOnOneAdvice.ts
+'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-export default function useOneOnOneAdvice() {
-  const [adviceData, setAdviceData] = useState<string | null>(null);
+// Adviceの型定義
+interface Advice {
+  advice: string;
+  date: string;
+}
+
+export default function useOneOnOneAdvice(slackUserId: string, startDate: string, endDate: string) {
+  const [adviceData, setAdviceData] = useState<Advice | null>(null); // Advice型またはnull
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAdvice = async (slackUserId: string, startDate: string, endDate: string) => {
+  const fetchAdviceData = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // モックデータを設定
-      setAdviceData(
-        `ここにアドバイスが表示されます。ユーザーID: ${slackUserId}, 開始日: ${startDate}, 終了日: ${endDate}`,
+      // クエリパラメータを含むURLを構築
+      const response = await fetch(
+        `http://localhost:8000/client/print_advices/${slackUserId}/?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`,
       );
+      if (!response.ok) {
+        throw new Error(`Failed to fetch advice: ${response.status} ${response.statusText}`);
+      }
+      const data: Advice = await response.json(); // APIのレスポンスがAdvice型
+      setAdviceData(data); // 状態に設定
     } catch (err) {
-      setError('アドバイスの取得に失敗しました');
+      console.error('Error fetching advice:', err);
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
       setLoading(false);
     }
   };
 
-  return { adviceData, loading, error, fetchAdvice };
+  useEffect(() => {
+    if (slackUserId && startDate && endDate) {
+      fetchAdviceData();
+    }
+  }, [slackUserId, startDate, endDate]);
+
+  return { adviceData, loading, error, fetchAdvice: fetchAdviceData };
 }

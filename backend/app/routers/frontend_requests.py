@@ -95,19 +95,13 @@ def save_summary_report(report: SummaryReportRequest, db: Session=Depends(get_db
 # 保存された全ての日報サマリーをDBから出力する
 @router.get("/print_all_summary_reports/{slack_user_id}/", response_model=list[SavedSummaryReport])
 def print_all_summary_reports(slack_user_id: str, db: Session=Depends(get_db)):
-@router.get("/print_all_summary_reports/{slack_user_id}/", response_model=list[SavedSummaryReport])
-def print_all_summary_reports(slack_user_id: str, db: Session=Depends(get_db)):
     # 返り値: util.summary.get_all_saved_summarize_history.pyを参照
-    return get_all_saved_summary_reports(slack_user_id, db)
     return get_all_saved_summary_reports(slack_user_id, db)
 
 # 保存された特定の日報サマリーをDBから出力する
 @router.get("/print_saved_summary_report/{slack_user_id}/", response_model=SavedSummaryReport)
 def print_saved_summary_report(slack_user_id: str, created_at: date=Query(...), db: Session=Depends(get_db)):
-@router.get("/print_saved_summary_report/{slack_user_id}/", response_model=SavedSummaryReport)
-def print_saved_summary_report(slack_user_id: str, created_at: date=Query(...), db: Session=Depends(get_db)):
     # 返り値: util.summary.get_saved_summarize_history.pyを参照
-    return get_saved_summary_report(slack_user_id, created_at, db)
     return get_saved_summary_report(slack_user_id, created_at, db)
 
 #-------------1on1アドバイス-------------
@@ -127,19 +121,14 @@ def save_advice(advices: AdvicesRequest, db: Session=Depends(get_db)):
 # 保存された全ての1on1アドバイスをDBから出力する
 @router.get("/print_all_advices/{slack_user_id}/", response_model=list[SavedAdvices])
 def print_all_advices(slack_user_id: str, db: Session=Depends(get_db)):
-@router.get("/print_all_advices/{slack_user_id}/", response_model=list[SavedAdvices])
-def print_all_advices(slack_user_id: str, db: Session=Depends(get_db)):
     # 参照: app.util.advices.get_all_saved_advices_history.py
     return get_all_saved_advices_history(slack_user_id, db)
-    return get_all_saved_advices_history(slack_user_id, db)
+  
 
 # 保存された特定の1on1アドバイスをDBから出力する
 @router.get("/print_saved_advice/{slack_user_id}/", response_model=SavedAdvices)
 def print_saved_advice(slack_user_id: str, created_at: date, db):
-@router.get("/print_saved_advice/{slack_user_id}/", response_model=SavedAdvices)
-def print_saved_advice(slack_user_id: str, created_at: date, db):
     # 参照: app.util.advices.get_saved_advices_history.py
-    return get_saved_advices_history(slack_user_id, created_at, db)
     return get_saved_advices_history(slack_user_id, created_at, db)
 
 #-------------キャリアアンケート-------------
@@ -147,10 +136,7 @@ def print_saved_advice(slack_user_id: str, created_at: date, db):
 @router.get("/print_all_career_survey_results/{slack_user_id}/")
 def print_all_career_survey_results(slack_user_id: str, db: Session=Depends(get_db)):
     return make_analysis_results_list(slack_user_id, db)
-#指定したユーザーの、全てのアンケート分析結果を取得する
-@router.get("/print_all_career_survey_results/{slack_user_id}/")
-def print_all_career_survey_results(slack_user_id: str, db: Session=Depends(get_db)):
-    return make_analysis_results_list(slack_user_id, db)
+
 
 
 

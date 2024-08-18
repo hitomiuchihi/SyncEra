@@ -188,17 +188,3 @@ class AnalysisResult(Base):
 
     def __repr__(self):
         return f"<AnalysisResult(id={self.id}, slack_user_id={self.slack_user_id}, result={self.result}, save_date={self.save_date})>"
-
-# 分析後のアンケート結果をDB保存しておくテーブル
-class AnalysisResult(Base):
-    __tablename__ = 'analysis_result'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    slack_user_id = Column(String, ForeignKey('slack_user_info.id'), nullable=False)
-    result = Column(Text, nullable=False)
-    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-
-    slack_user_info = relationship("SlackUserInfo", back_populates="analysis_results")
-
-    def __repr__(self):
-        return f"<AnalysisResult(id={self.id}, slack_user_id={self.slack_user_id}, result={self.result}, save_date={self.save_date})>"

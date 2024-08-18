@@ -31,7 +31,7 @@ export default function useSummaryData(
           throw new Error('Start date and end date must be provided');
         }
         const response = await fetch(
-          `http://localhost:8000/client/print_summary/${slack_user_id}/?start_date=${encodeURIComponent(start_date)}&end_date=${encodeURIComponent(end_date)}`,
+          `http://localhost:8000/client/print_summary/${encodeURIComponent(slack_user_id)}/?start_date=${encodeURIComponent(start_date)}&end_date=${encodeURIComponent(end_date)}`,
         );
         if (!response.ok) {
           throw new Error(`Failed to fetch summary data: ${response.status}`);

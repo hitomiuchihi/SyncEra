@@ -6,8 +6,6 @@ from sqlalchemy.orm import Session
 from openai import OpenAI
 from datetime import date
 from app.util.survey_analysis.analysis_functions import (
-    filtered_by_slack_user_id_analysis,
-    filtered_by_user_and_date,
     latest_response_by_user,
     latest_two_responses_by_user,
     latest_responses_by_user_in_past_year
@@ -101,7 +99,8 @@ def save_survey_result(slack_user_id: str, db: Session = Depends(get_db)):
     
 
 #_____関数テスト_____
-slack_user_id = "U07F8NPV1RQ"
+# slack_user_id = "U07F8NPV1RQ"
+slack_user_id = "sample_4"
 db=get_db()
 
 test_response=save_survey_result(slack_user_id, db)
