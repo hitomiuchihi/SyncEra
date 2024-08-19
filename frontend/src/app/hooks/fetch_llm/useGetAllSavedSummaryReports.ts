@@ -7,14 +7,14 @@ import { useEffect, useState } from 'react';
 
 interface SavedSummaryReport {
   id: number;
-  employee_id: string;
+  slack_user_id: string;
   summary: string;
   created_at: Date;
 }
 
 type SavedSummaryReports = SavedSummaryReport[];
 
-export const useGetAllSavedSummaryReports = (employeeId: string) => {
+export const useGetAllSavedSummaryReports = (employeeId: string | null) => {
   const [SavedSummaryReports, setSavedSummaryReports] = useState<SavedSummaryReports>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -32,11 +32,10 @@ export const useGetAllSavedSummaryReports = (employeeId: string) => {
             `Failed to fetch all saved summary reports.: ${response.status} ${response.statusText}`,
           );
         }
-
+        console.log(`response: ${response}`); // response: [object Response]
         // 読める形に変換
         const allSavedSummaryReports = await response.json();
-        console.log(`取得したサマリーデータ: ${allSavedSummaryReports}`);
-
+        console.log('取得したサマリーデータ:', JSON.stringify(allSavedSummaryReports, null, 2)); //期待通りのログ出力が得られる
         // エラーの場合
         if (allSavedSummaryReports.error) {
           throw new Error(allSavedSummaryReports.error);

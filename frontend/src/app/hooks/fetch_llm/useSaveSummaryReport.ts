@@ -16,6 +16,8 @@ export const useSaveSummaryReport = async (slackUserId: string, summary: string)
 
   console.log(`◆保存するオブジェクト: ${summaryReportData}`);
 
+  console.log(`◆保存するオブジェクト: ${summaryReportData}`);
+
   try {
     const response = await fetch('http://localhost:8000/client/save_summary_report/', {
       method: 'POST',
