@@ -165,12 +165,27 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGetAllSavedAdvices } from '../../../hooks/fetch_llm/useGetAllSevedAdvices';
 import { useGetSavedAdvice } from '../../../hooks/fetch_llm/useGetSavedAdvice';
 import { useSaveAdvice } from '../../../hooks/fetch_llm/useSaveAdvice';
+import useOneOnOneAdvice from '../../../hooks/useOneOnOneAdvice';
 
-type EmployeeInfo = {
+interface Advice {
+  id: number;
+  startDate: string;
+  endDate: string;
+  advice: string;
+}
+
+interface SavedAdvice {
+  id: number;
+  employee_id: string;
+  advices: string;
+  created_at: string;
+}
+
+interface EmployeeInfo {
   department: string;
   email: string;
   id: string;
@@ -178,94 +193,114 @@ type EmployeeInfo = {
   project: string;
   role: string;
   slack_user_id: string;
-};
-
-type SavedAdvice = {
-  id: number;
-  employee_id: string;
-  advices: string;
-  created_at: string; // or Date type
-};
-
-interface Advice {
-  employee_id: string;
-  advice: string;
 }
 
-const AdviceComponent = () => {
+export default function OneOnOneAdvicePage() {
   const params = useParams();
   const slack_user_id = params.slack_user_id as string;
-  const [employee, setEmployeeInfo] = useState<EmployeeInfo | null>(null);
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [newAdvice, setNewAdvice] = useState<string | null>(null);
-  const [generatingAdvice, setGeneratingAdvice] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [createdAt, setCreatedAt] = useState<Date>(new Date());
-  const [selectedAdvice, setSelectedAdvice] = useState<SavedAdvice | null>(null);
 
+  const [employeeInfo, setEmployeeInfo] = useState<EmployeeInfo | null>(null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [newAdvice, setNewAdvice] = useState('');
+  const [savedAdvices, setSavedAdvices] = useState<Advice[]>([]);
+  const [selectedAdvice, setSelectedAdvice] = useState<Advice | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const {
+    adviceData,
+    loading: generatingAdvice,
+    error: adviceError,
+    fetchAdvice,
+  } = useOneOnOneAdvice();
+  const saveAdvice = useSaveAdvice();
   const {
     allSavedAdvices,
     loading: fetchingAllAdvices,
     error: allAdvicesError,
-  } = useGetAllSavedAdvices(employee?.id || '');
+  } = useGetAllSavedAdvices(slack_user_id);
+  const { savedAdvice } = useGetSavedAdvice(slack_user_id, new Date());
 
-  const {
-    savedAdvice,
-    loading: fetchingSavedAdvice,
-    error: savedAdviceError,
-  } = useGetSavedAdvice(employee?.id || '', createdAt);
-
-  const saveAdvice = useSaveAdvice;
-
-  const handleGenerateAdvice = async () => {
-    setGeneratingAdvice(true);
-    setError(null);
-
-    try {
-      const response = await fetch(
-        `http://localhost:8000/client/print_advices/${slack_user_id}/?start_date=${startDate}&end_date=${endDate}`,
-        { method: 'GET' },
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to generate advice: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setNewAdvice(data.advice);
-    } catch (error) {
-      console.error('Failed to generate advice:', error);
-      setError(error instanceof Error ? error.message : 'Unknown error');
-    } finally {
-      setGeneratingAdvice(false);
-    }
-  };
-
-  const handleSaveAdvice = async () => {
-    if (newAdvice) {
+  useEffect(() => {
+    async function fetchEmployeeData() {
       setLoading(true);
-      setError(null);
-
       try {
-        await saveAdvice(slack_user_id, newAdvice);
-        setNewAdvice(null);
-        console.log('Advice saved successfully');
-      } catch (error) {
-        setError(error instanceof Error ? error.message : 'Unknown error');
+        const response = await fetch(
+          `http://localhost:8000/client/selected_employee/${slack_user_id}/`,
+        );
+        if (!response.ok) {
+          throw new Error(`Failed to fetch employee data: ${response.status}`);
+        }
+        const data = await response.json();
+        setEmployeeInfo(data[0]); // Assuming the employee info is the first item in the array
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);
       }
     }
+
+    if (slack_user_id) {
+      fetchEmployeeData();
+    }
+  }, [slack_user_id]);
+
+  useEffect(() => {
+    if (allSavedAdvices) {
+      setSavedAdvices(
+        allSavedAdvices.map((advice: SavedAdvice) => ({
+          id: advice.id,
+          startDate: advice.created_at,
+          endDate: advice.created_at,
+          advice: advice.advices,
+        })),
+      );
+    }
+  }, [allSavedAdvices]);
+
+  const handleGenerateAdvice = async () => {
+    if (!startDate || !endDate) return;
+    await fetchAdvice(slack_user_id, startDate, endDate);
+    if (adviceData) {
+      setNewAdvice(adviceData);
+    }
   };
 
-  if (fetchingAllAdvices || fetchingSavedAdvice) {
+  const handleSaveAdvice = async () => {
+    if (!newAdvice) return;
+    try {
+      await saveAdvice(slack_user_id, newAdvice);
+      // 保存後、全てのアドバイスを再取得
+      const updatedAdvices = await useGetAllSavedAdvices(slack_user_id);
+      if (updatedAdvices.allSavedAdvices) {
+        setSavedAdvices(
+          updatedAdvices.allSavedAdvices.map((advice: SavedAdvice) => ({
+            id: advice.id,
+            startDate: advice.created_at,
+            endDate: advice.created_at,
+            advice: advice.advices,
+          })),
+        );
+      }
+      setNewAdvice('');
+      setStartDate('');
+      setEndDate('');
+    } catch (error) {
+      console.error('Failed to save advice:', error);
+    }
+  };
+
+  if (loading) {
     return <div>Loading...</div>;
   }
 
-  if (allAdvicesError || savedAdviceError) {
-    return <div>Error: {allAdvicesError?.message || savedAdviceError?.message}</div>;
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!employeeInfo) {
+    return <div>従業員データが見つかりません</div>;
   }
 
   return (
@@ -305,18 +340,18 @@ const AdviceComponent = () => {
       <main className="flex-1 p-8 bg-gray-100">
         <div className="bg-white p-6 rounded-lg shadow-md border border-[#003366]">
           <h2 className="text-3xl font-bold mb-4 text-[#003366]">
-            {employee?.name}の1on1アドバイス
+            {employeeInfo.name}の1on1アドバイス
           </h2>
           <div className="mb-6">
             <h3 className="text-2xl font-semibold mb-2 text-[#003366]">社員情報</h3>
             <p className="text-[#333333]">
-              <strong>部署:</strong> {employee?.department}
+              <strong>部署:</strong> {employeeInfo.department}
             </p>
             <p className="text-[#333333]">
-              <strong>プロジェクト:</strong> {employee?.project}
+              <strong>プロジェクト:</strong> {employeeInfo.project}
             </p>
             <p className="text-[#333333]">
-              <strong>役職:</strong> {employee?.role}
+              <strong>役職:</strong> {employeeInfo.role}
             </p>
           </div>
 
@@ -329,13 +364,16 @@ const AdviceComponent = () => {
                 <p>Error: {allAdvicesError.message}</p>
               ) : (
                 <ul className="space-y-4">
-                  {allSavedAdvices.map((advice) => (
+                  {savedAdvices.map((advice: Advice) => (
                     <li
                       key={advice.id}
                       className="border p-4 rounded-lg shadow flex justify-between items-center bg-white hover:bg-gray-100 transition-colors duration-300"
                       onClick={() => setSelectedAdvice(advice)}
                     >
-                      <span>{new Date(advice.created_at).toLocaleDateString()}</span>
+                      <span>
+                        {new Date(advice.startDate).toLocaleDateString()} ~{' '}
+                        {new Date(advice.endDate).toLocaleDateString()}
+                      </span>
                       <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors duration-300">
                         詳細を見る
                       </button>
@@ -347,9 +385,10 @@ const AdviceComponent = () => {
                 <div className="mt-6 bg-white p-4 rounded-lg shadow">
                   <h4 className="text-xl font-semibold mb-2">選択されたアドバイス</h4>
                   <p className="text-sm text-gray-600 mb-2">
-                    期間: {new Date(selectedAdvice.created_at).toLocaleDateString()}
+                    期間: {new Date(selectedAdvice.startDate).toLocaleDateString()} ~{' '}
+                    {new Date(selectedAdvice.endDate).toLocaleDateString()}
                   </p>
-                  <p className="whitespace-pre-wrap">{selectedAdvice.advices}</p>
+                  <p className="whitespace-pre-wrap">{selectedAdvice.advice}</p>
                   <button
                     onClick={() => setSelectedAdvice(null)}
                     className="mt-4 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors duration-300"
@@ -389,7 +428,7 @@ const AdviceComponent = () => {
               >
                 {generatingAdvice ? 'アドバイス生成中...' : 'アドバイス生成'}
               </button>
-              {error && <p className="text-red-500 mt-2">{error}</p>}
+              {adviceError && <p className="text-red-500 mt-2">{adviceError}</p>}
               {newAdvice && (
                 <div className="mt-6">
                   <h4 className="text-xl font-semibold mb-2">生成されたアドバイス:</h4>
@@ -408,6 +447,4 @@ const AdviceComponent = () => {
       </main>
     </div>
   );
-};
-
-export default AdviceComponent;
+}
