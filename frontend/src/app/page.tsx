@@ -2,7 +2,7 @@
 
 import Link from 'next/link'; // Linkをインポート
 import { useState } from 'react';
-import PostContactForm from './hooks/fetch_contact/postContactForm';
+import ContactForm from './hooks/fetch_contact/postContactForm';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'none' | 'syncEra' | 'appInfo'>('none');
@@ -196,7 +196,7 @@ export default function Home() {
       {/* Contact Section */}
       <section id="contact" className="py-20 bg-gray-100 text-center">
         <h2 className="text-4xl font-bold mb-8">お問い合わせ</h2>
-        <PostContactForm /> {/* 問い合わせフォームを表示 */}
+        <ContactForm /> {/* 問い合わせフォームを表示 */}
       </section>
 
       {/* Footer */}
