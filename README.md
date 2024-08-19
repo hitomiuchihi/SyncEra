@@ -1,4 +1,4 @@
-# Syncera
+# SyncEra
 
 ## 概要
 ここに内容
