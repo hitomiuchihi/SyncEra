@@ -1,3 +1,0 @@
-              - name: Deploy to Cloud Run
-                uses: google-github-actions/deploy-cloudrun@v2.7.1
-            
