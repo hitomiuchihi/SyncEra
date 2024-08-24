@@ -1,7 +1,6 @@
 import logging
 import os
 from dotenv import load_dotenv
-from sqlalchemy.orm import Session
 from app.db.models import Employee
 from app.db.database import get_db
 
@@ -38,4 +37,3 @@ def compile_target_employee_info(slack_user_id: str):
         logger.debug(f"◆指定ユーザーの情報を読解可能な文字列に変換しました。")
     
     return compiled_target_employee_info
-
