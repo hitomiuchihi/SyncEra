@@ -8,6 +8,7 @@ from slackeventsapi import SlackEventAdapter
 from dotenv import load_dotenv
 import os
 import logging
+from app.services.redis_client import redis_client
 
 # .envファイルから環境変数を読み込む
 load_dotenv()

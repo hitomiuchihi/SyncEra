@@ -4,14 +4,15 @@ import json
 from dotenv import load_dotenv
 from redis import Redis
 from app.db.models import Question
+from app.services.redis_client import redis_client
 
 # 環境変数の読み込み
 load_dotenv()
 
 # Redisクライアントの設定
-REDIS_HOST = os.getenv("REDIS_HOST", "redis") # "redis"部分はコンテナでの開発時。ローカルの時はlocalhost
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-redis_client = Redis(host=REDIS_HOST, port=REDIS_PORT)
+# REDIS_HOST = os.getenv("REDIS_HOST", "redis") # "redis"部分はコンテナでの開発時。ローカルの時はlocalhost
+# REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+# redis_client = redis_client(host=REDIS_HOST, port=REDIS_PORT)
 
 # 質問オブジェクトのシリアライズ（Redisに保存する）
 def serialize_question(question: Question):
