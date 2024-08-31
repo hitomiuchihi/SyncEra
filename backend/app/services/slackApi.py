@@ -27,7 +27,8 @@ logger = logging.getLogger(__name__)
 
 # Slack APIからdaily_reportチャンネルの投稿情報を取得し、Postgresに保存する関数
 def get_and_save_daily_report(event, db: Session):
-
+    # print("️get_and_save_daily_reporttが呼ばれました")
+    logger.debug("◆◆get_and_save_daily_reportが呼ばれました")
     conversation_history = []
     channel_id = os.getenv("DAILY_REPORT_CHANNEL_ID")
     excluded_user_id = os.getenv("EXCLUDED_USER_ID")  # 環境変数から除外するユーザーIDを取得
@@ -86,6 +87,7 @@ def get_and_save_daily_report(event, db: Session):
 
 # Slack APIからtimesチャンネルの投稿情報を取得し、Postgresに保存する関数
 def get_and_save_times_tweet(event, db: Session):
+    logger.debug("◆◆get_and_save_times_tweetが呼ばれました")
 
     conversation_history = []
     channel_id = event.get('channel')  # イベントからチャンネルIDを取得
@@ -105,7 +107,7 @@ def get_and_save_times_tweet(event, db: Session):
         logger.debug("Conversations history retrieved")
 
         # 結果をログに出力
-        logger.info("{} messages found in {}".format(len(conversation_history), channel_id))
+        logger.info("◆◆{} messages found in {}".format(len(conversation_history), channel_id))
 
         for message in conversation_history:
             # subtypeがchannel_joinの場合はスキップ
@@ -118,7 +120,7 @@ def get_and_save_times_tweet(event, db: Session):
 
             # 環境変数で設定されたユーザーIDの投稿をスキップ
             if user_id == excluded_user_id:
-                logger.info(f"Skipping message from user {user_id}")
+                logger.info(f"◆◆ botの投稿 {user_id}")
                 continue
 
             # メッセージが存在するかをチェック
@@ -126,12 +128,12 @@ def get_and_save_times_tweet(event, db: Session):
             if existing_message:
                 # メッセージが存在する場合、内容を更新
                 existing_message.text = text
-                logger.debug(f"Message updated: ts={ts}, user_id={user_id}")
+                logger.debug(f"◆◆投稿内容を更新しました: ts={ts}, user_id={user_id}")
             else:
                 # メッセージが存在しない場合、新規に追加
                 message_record = TimesTweet(ts=ts, slack_user_id=user_id, text=text, channel_id=channel_id)
                 db.add(message_record)
-                logger.debug(f"Message added: ts={ts}, user_id={user_id}")
+                logger.debug(f"◆◆投稿を保存しました: ts={ts}, user_id={user_id}")
 
             # スレッドのリプライを取得
             if 'thread_ts' in message:

@@ -54,7 +54,7 @@ def seed_data():
         '''>>> employee'''
         employee_1 = Employee(
             id=uuid.uuid4(),
-            name='くーみん',
+            name='市川 くみ',
             email='kumi_ichikawa@gmail.com',
             department='プロダクト部',
             role='フロントエンド',
@@ -64,7 +64,7 @@ def seed_data():
 
         employee_2 = Employee(
             id=uuid.uuid4(),
-            name='めめ',
+            name='中戸川 瞳',
             email='hitomi_uchihi@gmail.com',
             department='プロダクト部',
             role='バックエンド',
@@ -74,7 +74,7 @@ def seed_data():
 
         employee_3 = Employee(
             id=uuid.uuid4(),
-            name='みきこ',
+            name='ギャスパー みきこ',
             email='mikiko_gaspar@gmail.com',
             department='プロダクト部',
             role='データベース',
@@ -84,7 +84,7 @@ def seed_data():
 
         employee_4 = Employee(
             id=uuid.uuid4(),
-            name='さよこ',
+            name='佃 さよこ',
             email='sayoko_tsukuda@gmail.com',
             department='プロダクト部',
             role='データベース',

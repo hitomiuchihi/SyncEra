@@ -32,7 +32,8 @@ def send_message_to_daily_report():
             channel=os.getenv("DAILY_REPORT_CHANNEL_ID"),
             text="setting message"
         )
-        logger.info(result)
+        # logger.info(result)
+        logger.debug("◆◆デイリーレポートチャンネルにメッセージが投稿されました")
     except SlackApiError as e:
         logger.error(f"Error posting message: {e}")
 

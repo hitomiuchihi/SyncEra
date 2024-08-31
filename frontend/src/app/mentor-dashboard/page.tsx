@@ -2,15 +2,14 @@
 // src/app/manager-dashboard/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { User } from 'firebase/auth';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import LogoutButton from '@/components/signup_and_login/LogoutButton';
 import app from '@/firebase/config'; // Firebase 初期化ファイルをインポート
 import clientLogger from '@/lib/clientLogger';
+import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import Link from 'next/link';
-import LogoutButton from '@/components/signup_and_login/LoguoutButton';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import Loading from '../../components/loading';
 export default function ManagerDashboard() {
   const [user, setUser] = useState<User | null>(null);

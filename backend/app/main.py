@@ -5,16 +5,14 @@ from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 # backend/app/main.py
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from app.services.slackApi import get_and_save_daily_report, get_and_save_times_tweet
 from app.util.slack_api.get_slack_user_info import get_and_save_slack_users
 from app.util.career_survey.send_survey_to_all import send_survey_to_employee, send_survey_with_text_input
-from app.services.schedule_survey import schedule_monthly_survey, schedule_hourly_survey
+from app.services.schedule_survey import schedule_monthly_survey
 from app.util.career_survey.question_cache import clear_question_cache, deserialize_question
 from app.util.survey_analysis.save_analysis_result import save_survey_result
 from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
 from slack_sdk.errors import SlackApiError
 from app.db.database import get_db
 from app.db.models import Question, UserResponse
@@ -28,6 +26,8 @@ load_dotenv()
 log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+# slack_sdkライブラリのログレベルをINFOに設定
+logging.getLogger("slack_sdk").setLevel(logging.INFO)
 
 # redisの接続設定
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
@@ -102,6 +102,7 @@ def read_daily_report(db: Session = Depends(get_db)):
 # 日報または、つぶやきが投稿されたときに、投稿内容を取得してDB保存するためのエンドポイント
 @app.post("/slack/events")
 async def slack_events(request: Request, db: Session = Depends(get_db)):
+    logger.debug("◆◆エンドポイントにリクエストが送られました")
     try:
         payload = await request.json()
         logger.debug(f"Payload: {payload}")
@@ -114,6 +115,7 @@ async def slack_events(request: Request, db: Session = Depends(get_db)):
         # イベント処理
         event = payload.get("event", {})
         if event.get("type") == "message" and "subtype" not in event:
+            logger.debug("◆◆Slackイベントが発生しました")
             channel_id = event.get("channel")
             if channel_id in TWEET_CHANNEL_IDS:
                 return get_and_save_times_tweet(event, db)
@@ -122,8 +124,8 @@ async def slack_events(request: Request, db: Session = Depends(get_db)):
 
         return {"status": "ignored"}
     except Exception as e:
-        logger.error(f"Error processing request: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        logger.error(f"◆◆リクエスト処理中にエラーが発生しました: {e}")
+        raise HTTPException(status_code=500, detail="予期しないエラーが発生しました")
 
 # Slackでキャリアアンケート送信のためのエンドポイント
 # Slackでのインタラクションを処理し、ユーザーの回答を保存して次の質問を送信します
@@ -133,6 +135,7 @@ async def slack_events(request: Request, db: Session = Depends(get_db)):
 
 @app.post("/slack/actions")
 async def handle_slack_interactions(request: Request, db: Session = Depends(get_db)):
+    logger.debug("◆◆キャリアアンケートのエンドポイントにリクエストが送られました")
     try:
         # リクエストのフォームデータを取得
         body = await request.form()
@@ -150,7 +153,7 @@ async def handle_slack_interactions(request: Request, db: Session = Depends(get_
         elif "callback_id" in payload:
             question_id = int(payload["callback_id"])
         else:
-            raise ValueError("Neither block_id nor callback_id found in payload")
+            raise ValueError("block_id または callback_id がペイロードに見つかりません")
 
         # ユーザーの選択した値を取得
         # 自由記述が含まれている場合、送信ボタンクリックをトリガーに値を取得（ free_text )
@@ -158,13 +161,13 @@ async def handle_slack_interactions(request: Request, db: Session = Depends(get_
         if "block_id" in actions[0]:
             actions[0]["text"]["text"] == "送信"
             free_text = payload['state']['values'].get(block_id, {}).get('free_text_input', {}).get('value')
-            logger.info(f"User {user_id} submitted free text: {free_text}")
+            logger.info(f"ユーザーID {user_id} が自由記述を書いて送信しました: {free_text}")
         else:
             selected_option = actions[0]["value"]
-            logger.info(f"User {user_id} submitted the survey with option {selected_option}")
+            logger.info(f" {user_id} が選択ボタンを押しました: {selected_option}")
 
         if selected_option is None and free_text is None:
-            logger.warning(f"No valid option or free text provided by user {user_id}. Proceeding with next question.")
+            logger.warning(f" {user_id} が自由記述を空白にして送信しましたが、次の質問へ遷移します")
             free_text = ""  # 空の自由記述でも進めるように空文字を設定
 
         # 回答をDBに保存
@@ -177,14 +180,14 @@ async def handle_slack_interactions(request: Request, db: Session = Depends(get_
         # 回答をDBに保存
         db.add(response_data)
         db.commit()
-        logger.info(f"Response saved for user {user_id} for question {question_id}")
+        logger.info(f"ユーザーID {user_id} の質問ID {question_id} に対する回答が保存されました")
         # キャッシュクリアを追加
         clear_question_cache(question_id)
 
         # エラーハンドリング
         question = db.query(Question).filter(Question.id == question_id).first()
         if not question:
-            raise HTTPException(status_code=404, detail="Question not found")
+            raise HTTPException(status_code=404, detail="質問が見つかりません")
         # 次の質問を取得して送信（Redisキャッシュ対応）
         next_question_id = None
         # 次の質問のIDを決定する
@@ -204,7 +207,7 @@ async def handle_slack_interactions(request: Request, db: Session = Depends(get_
         # アンケート終了時の処理
         if not next_question_id:
             slack_client.chat_postMessage(channel=user_id, text="アンケートの回答を送信しました！ご回答ありがとうございました。")
-            logger.info(f"Survey completed for user {user_id}")
+            logger.info(f"ユーザーID {user_id} のアンケートが完了しました")
             # LLMによるアンケートの分析結果を保存する関数
             save_survey_result(user_id, db)
             # キャッシュクリア
@@ -215,11 +218,11 @@ async def handle_slack_interactions(request: Request, db: Session = Depends(get_
             cached_question = redis_client.get(next_question_key)
 
             if cached_question:
-                logger.info(f"Cache hit for question {next_question_id}")
+                logger.info(f"質問ID {next_question_id} のキャッシュヒット")
                 # キャッシュから質問を取得し、デシリアライズ
                 next_question = deserialize_question(cached_question)
             else:
-                logger.info(f"Cache miss for question {next_question_id}, retrieving from database")
+                logger.info(f"質問ID {next_question_id} のキャッシュミス、データベースから取得します")
                 # キャッシュにない場合はデータベースから取得
                 next_question = db.query(Question).filter(Question.id == next_question_id).first()
 
@@ -232,13 +235,13 @@ async def handle_slack_interactions(request: Request, db: Session = Depends(get_
         return Response(status_code=200)
 
     except Exception as e:
-        logger.error(f"Error processing request: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        logger.error(f"リクエスト処理中にエラーが発生しました: {e}")
+        raise HTTPException(status_code=500, detail="内部サーバーエラー")
 
 # スケジュールを FastAPI のスタートアップイベントで開始
 @app.on_event("startup")
 async def start_scheduler():
-    schedule_hourly_survey()
+    # schedule_hourly_survey()
     schedule_monthly_survey()
 
 # FastAPIアプリケーションにルーターを登録
