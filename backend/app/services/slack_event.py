@@ -1,13 +1,14 @@
+import os
+import logging
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.db.models import DailyReport, TimesTweet
 from app.util.slack_api.get_slack_user_info import get_and_save_slack_users
+from app.util.slack_api.save_cached_daily_reports import save_cached_daily_reports_to_db
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from slackeventsapi import SlackEventAdapter
 from dotenv import load_dotenv
-import os
-import logging
 from app.services.redis_client import redis_client
 
 # .envファイルから環境変数を読み込む
@@ -26,9 +27,11 @@ log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+
+#-------------daily_reportチャンネル-------------
+
 # Slack APIからdaily_reportチャンネルの投稿情報を取得し、Postgresに保存する関数
 def get_and_save_daily_report(event, db: Session):
-    # print("️get_and_save_daily_reporttが呼ばれました")
     logger.debug("◆◆get_and_save_daily_reportが呼ばれました")
     conversation_history = []
     channel_id = os.getenv("DAILY_REPORT_CHANNEL_ID")
@@ -85,6 +88,9 @@ def get_and_save_daily_report(event, db: Session):
         raise HTTPException(status_code=500, detail="Database error")
 
     return {"status": conversation_history}
+
+
+#-------------Timesチャンネル-------------
 
 # Slack APIからtimesチャンネルの投稿情報を取得し、Postgresに保存する関数
 def get_and_save_times_tweet(event, db: Session):
