@@ -26,12 +26,12 @@ def save_cached_daily_reports_to_db(db: Session):
         if existing_message:
             # メッセージが存在する場合、内容を更新
             existing_message.text = text
-            logger.debug(f"Message updated from cache: ts={ts}, user_id={user_id}")
+            logger.debug(f"◆◆キャッシュからメッセージを更新しました: ts={ts}, user_id={user_id}")
         else:
             # メッセージが存在しない場合、新規に追加
             message_record = DailyReport(ts=ts, slack_user_id=user_id, text=text)
             db.add(message_record)
-            logger.debug(f"Message added from cache: ts={ts}, user_id={user_id}")
+            logger.debug(f"◆◆キャッシュからメッセージを追加しました: ts={ts}, user_id={user_id}")
 
     # コミットして変更を保存
     db.commit()
