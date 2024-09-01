@@ -71,18 +71,8 @@ async def handle_slack_interactions(request: Request, db: Session = Depends(get_
             free_text = ""  # 空の自由記述でも進めるように空文字を設定
 
         store_user_response_temporarily(user_id, question_id, free_text or selected_option)
-        # # 回答をDBに保存
-        # response_data = UserResponse(
-        #     slack_user_id=user_id,
-        #     question_id=question_id,
-        #     answer=selected_option,
-        #     free_text=free_text
-        # )
-        # # 回答をDBに保存
-        # db.add(response_data)
-        # db.commit()
-        # logger.info(f"◆◆SlackユーザーID {user_id} の質問ID {question_id} に対する回答が保存されました")
-        # キャッシュクリアを追加
+
+        # 質問キャッシュクリアを追加
         clear_question_cache(question_id)
 
         # エラーハンドリング
