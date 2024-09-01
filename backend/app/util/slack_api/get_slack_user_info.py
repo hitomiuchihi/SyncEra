@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 # Slack APIからユーザー情報を取得し、Postgresに保存する関数
 def get_and_save_slack_users(db: Session = Depends(get_db)):
+    logger.debug("◆◆get_and_save_slack_usersが呼び出されました")
     try:
         # users.listメソッドを使用してユーザー情報を取得
         result = slack_client.users_list()
