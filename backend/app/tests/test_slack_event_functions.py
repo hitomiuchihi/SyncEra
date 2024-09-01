@@ -1,7 +1,8 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from sqlalchemy.orm import Session
-from app.services.slackApi import get_and_save_users, get_and_save_daily_report, get_and_save_times_tweet
+from app.services.slack_event import get_and_save_daily_report, get_and_save_times_tweet
+from app.util.slack_api.get_slack_user_info import get_and_save_slack_users
 from app.db.models import SlackUserInfo, DailyReport, TimesTweet
 
 #  unittest.mock の MagicMock と patch を使用して、依存する外部リソースやメソッドをモックしてデータベースのセッション管理
@@ -17,7 +18,7 @@ def slack_client_mock(monkeypatch):
     return mock
 
 # ユーザー情報の取得とDB保存テスト
-def test_get_and_save_users(db_session: Session, slack_client_mock: MagicMock):
+def test_get_and_save_slack_users(db_session: Session, slack_client_mock: MagicMock):
     # ベタ打ちのモックデータ
     users_list_data = {
         "members": [
@@ -27,7 +28,7 @@ def test_get_and_save_users(db_session: Session, slack_client_mock: MagicMock):
     }
     slack_client_mock.users_list.return_value = users_list_data
 
-    result = get_and_save_users(db_session)
+    result = get_and_save_slack_users(db_session)
     assert result["status"] == "success"
 
     # db_session.mergeが正しいデータで呼び出されたか確認
