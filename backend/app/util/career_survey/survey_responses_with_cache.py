@@ -5,10 +5,13 @@ from app.services.redis_client import redis_client
 from sqlalchemy.orm import Session
 from app.db.models import UserResponse
 
+# 環境変数の読み込み
+load_dotenv()
+
+# ロギングの設定
 log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
 
 # キャリアアンケートの回答をキャッシュに保存する関数
 def store_user_response_temporarily(user_id: str, question_id: int, answer: str):

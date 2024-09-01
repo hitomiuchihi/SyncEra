@@ -5,13 +5,13 @@ from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from app.util.career_survey.send_survey_to_all import send_survey_to_employee, send_survey_with_text_input
+from app.util.career_survey.survey_responses_with_cache import save_responses_to_db,store_user_response_temporarily
 from app.util.career_survey.question_cache import clear_question_cache, deserialize_question
 from app.util.survey_analysis.save_analysis_result import save_survey_result
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from app.db.database import get_db
-from app.db.models import Question, UserResponse
-from app.routers import frontend_requests
+from app.db.models import Question
 from app.services.redis_client import redis_client
 
 # 環境変数の読み込み
@@ -70,17 +70,18 @@ async def handle_slack_interactions(request: Request, db: Session = Depends(get_
             logger.warning(f"◆◆ {user_id} が自由記述を空白にして送信しましたが、次の質問へ遷移します")
             free_text = ""  # 空の自由記述でも進めるように空文字を設定
 
-        # 回答をDBに保存
-        response_data = UserResponse(
-            slack_user_id=user_id,
-            question_id=question_id,
-            answer=selected_option,
-            free_text=free_text
-        )
-        # 回答をDBに保存
-        db.add(response_data)
-        db.commit()
-        logger.info(f"◆◆SlackユーザーID {user_id} の質問ID {question_id} に対する回答が保存されました")
+        store_user_response_temporarily(user_id, question_id, free_text or selected_option)
+        # # 回答をDBに保存
+        # response_data = UserResponse(
+        #     slack_user_id=user_id,
+        #     question_id=question_id,
+        #     answer=selected_option,
+        #     free_text=free_text
+        # )
+        # # 回答をDBに保存
+        # db.add(response_data)
+        # db.commit()
+        # logger.info(f"◆◆SlackユーザーID {user_id} の質問ID {question_id} に対する回答が保存されました")
         # キャッシュクリアを追加
         clear_question_cache(question_id)
 
@@ -108,6 +109,7 @@ async def handle_slack_interactions(request: Request, db: Session = Depends(get_
         if not next_question_id:
             slack_client.chat_postMessage(channel=user_id, text="アンケートの回答を送信しました！ご回答ありがとうございました。")
             logger.info(f"◆◆SlackユーザーID {user_id} のアンケートが完了しました")
+            save_responses_to_db(user_id, db)
             # LLMによるアンケートの分析結果を保存する関数
             save_survey_result(user_id, db)
             # キャッシュクリア
