@@ -20,6 +20,7 @@ SLACK_TOKEN = os.getenv("SLACK_API_KEY")
 SIGNING_SECRET = os.getenv("SIGNING_SECRET")
 slack_client = WebClient(token=SLACK_TOKEN)
 
+# Slack APIでメールアドレスからSlackユーザーIDを検索する関数
 async def get_slack_user_id_by_email(email: str):
     logger.info(f"◆◆get_slack_user_id_by_email関数が呼び出されました")
     try:
