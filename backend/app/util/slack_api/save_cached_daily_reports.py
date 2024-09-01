@@ -5,11 +5,15 @@ import logging
 from dotenv import load_dotenv
 import os
 
+# 環境変数の読み込み
+load_dotenv()
+
 # ロギングの設定
 log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# 日報投稿のバッチ処理を行う関数
 def save_cached_daily_reports_to_db(db: Session):
     keys = redis_client.keys("daily_report:*")
     for key in keys:
