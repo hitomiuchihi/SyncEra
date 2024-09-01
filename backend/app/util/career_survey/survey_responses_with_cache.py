@@ -23,10 +23,11 @@ def store_user_response_temporarily(user_id: str, question_id: int, answer: str)
 def save_responses_to_db(user_id: str, db: Session):
     responses = redis_client.hgetall(f"user_response:{user_id}")
     for question_id, answer in responses.items():
+        answer = answer.decode('utf-8') if isinstance(answer, bytes) else answer
         # answerの内容が自由記述（free_text）であるかを確認し、回答内容に応じて処理
         if isinstance(answer, dict) and 'free_text' in answer:
             free_text = answer['free_text']
-            answer = answer.get('option', '')  # 選択肢があればそれを使用、なければ空文字
+            answer = answer.get('selected_option', '')  # 選択肢があればそれを使用、なければ空文字
         else:
             free_text = None
         
