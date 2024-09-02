@@ -91,7 +91,7 @@ class TimesTweet(Base):
 
     def __repr__(self):
         return f"<TimesTweet(id={self.id}, user_id={self.user_id}, text={self.text}, created_at={self.created_at})>"
-
+    
     def to_dict(self):
         return {
             "id": self.id,
@@ -103,7 +103,7 @@ class TimesTweet(Base):
             "parent_user_id": self.parent_user_id,
             "created_at": self.created_at, 
         }
-    
+
 class TimesList(Base):
     __tablename__ = 'times_list'
 
@@ -142,7 +142,6 @@ class SummarizeHistory(Base):
             "summary": self.summary,
             "created_at": self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None
         }
-
 class AdvicesHistory(Base):
     __tablename__ = 'advices_history'
 
@@ -162,6 +161,7 @@ class AdvicesHistory(Base):
             "advices": self.advices,
             "created_at": self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
         }
+
 
 # ここからcareer_survey用の定義
 
@@ -211,7 +211,7 @@ class AnalysisResult(Base):
 
     def __repr__(self):
         return f"<AnalysisResult(id={self.id}, slack_user_id={self.slack_user_id}, result={self.result}, created_at={self.created_at})>"
-    
+
     def to_dict(self):
         return {
             "id": self.id,
