@@ -12,11 +12,12 @@ logger = logging.getLogger(__name__)
 
 # 特定の従業員の情報を取得する
 def get_employee_info(slack_user_id: str):
+    logger.debug(f"◆{slack_user_id}の情報を取得します")
     # データベースからuser情報を取得してくる
     db = get_db()
     try:
         target_employee_info = db.query(Employee).filter(Employee.slack_user_id == slack_user_id).all()
-        logger.debug(f"◆DBから指定ユーザーの情報を取得できました。")
+        logger.debug(f"◆DBから指定ユーザーの情報を取得できました。{target_employee_info}")
         return target_employee_info
     except Exception:
         logger.error(f"◆指定ユーザーの情報を取得中にエラーが発生しました。: {Exception}")

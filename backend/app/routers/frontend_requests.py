@@ -19,9 +19,22 @@ from app.util.summary.get_all_saved_summarize_history import get_all_saved_summa
 from app.util.contact_form.post_contact_form import save_contact_to_db  # 新しい関数をインポート
 from datetime import date
 from uuid import UUID
-
+import logging
+import os
+# import json
+from dotenv import load_dotenv
 
 router = APIRouter()
+
+# 環境変数の読み込み
+load_dotenv()
+
+# ロギングの設定
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+# slack_sdkライブラリのログレベルをINFOに設定
+logging.getLogger("slack_sdk").setLevel(logging.INFO)
 
 #-------------社員情報-------------
 
@@ -38,6 +51,7 @@ def get_all_employee():
 ## 特定社員の情報表示
 @router.get("/selected_employee/{slack_user_id}/")
 def get_selected_member(slack_user_id: str):
+    logger.debug(f"◆{slack_user_id}の情報を取得します")
     employee_info = get_employee_info(slack_user_id)
     if not employee_info:
         raise HTTPException(status_code=404, detail="指定されたメンバーが見つかりません")
