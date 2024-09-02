@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+# from uuid import UUID
 
 '''
 社員一覧にSlackのアイコンを表示するためのロジック用
@@ -43,6 +44,7 @@ class EmployeeUpdate(BaseModel):
 # データベースから取得した従業員情報のスキーマ
 class Employee(EmployeeBase):
     id: int  # IDはint型が一般的です（データベース依存） : ここuuidかも？という気はした。meme 0820 11:24
+    # id: str  # UUIDに変えてみたけど、DELETEとPUTが機能しなかった
     slack_user_id: Optional[str] = None  # Slack IDはオプショナルに設定
     slack_user_info: Optional['SlackUserInfo'] = None  # Slackの追加情報
 

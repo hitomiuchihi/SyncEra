@@ -9,7 +9,7 @@ from app.services.slack_event import get_and_save_daily_report, get_and_save_tim
 from app.util.slack_api.get_slack_user_info import get_and_save_slack_users
 from app.services.survey_service import handle_slack_interactions
 from app.util.slack_api.get_slack_user_id_with_email import get_slack_user_id_by_email
-from app.services.schedule_survey import schedule_monthly_survey
+from app.services.schedule_survey import schedule_monthly_survey, schedule_daily_report_save_to_db
 # from app.util.career_survey.question_cache import clear_question_cache, deserialize_question
 # from app.util.survey_analysis.save_analysis_result import save_survey_result
 from slack_sdk import WebClient
@@ -74,6 +74,7 @@ async def get_slack_user_id(email: str):
 # 日報の投稿情報の取得を確認するためのエンドポイント
 @app.get("/post_daily_report")
 def read_daily_report(db: Session = Depends(get_db)):
+    logger.debug(f"◆◆ 日報が投稿されました")
     return get_and_save_daily_report(None, db)
 
 # Slackイベントのエンドポイント
@@ -87,6 +88,7 @@ async def slack_events(request: Request, db: Session = Depends(get_db)):
 
         # SlackのURL検証のためのチャレンジリクエストに対応
         if "challenge" in payload:
+            logger.debug("◆◆Slackのチャレンジリクエストを処理中")
             return {"challenge": payload["challenge"]}
 
 
@@ -96,8 +98,10 @@ async def slack_events(request: Request, db: Session = Depends(get_db)):
             logger.debug("◆◆Slackイベントが発生しました")
             channel_id = event.get("channel")
             if channel_id in TWEET_CHANNEL_IDS:
+                logger.debug("◆◆ツイートチャンネルのイベントを処理中")
                 return get_and_save_times_tweet(event, db)
             if channel_id == os.getenv("DAILY_REPORT_CHANNEL_ID"):
+                logger.debug("◆◆日報チャンネルのイベントを処理中")
                 return get_and_save_daily_report(event, db)
 
         return {"status": "ignored"}
@@ -114,8 +118,9 @@ async def slack_actions(request: Request, db: Session = Depends(get_db)):
 # スケジュールを FastAPI のスタートアップイベントで開始
 @app.on_event("startup")
 async def start_scheduler():
-    # schedule_hourly_survey()
+    # schedule_hourly_survey() #テスト用
     schedule_monthly_survey()
+    schedule_daily_report_save_to_db()
 
 # FastAPIアプリケーションにルーターを登録
 app.include_router(router)

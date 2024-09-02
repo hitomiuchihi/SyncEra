@@ -20,7 +20,7 @@ logging.getLogger("slack_sdk").setLevel(logging.INFO)
 
 # 質問オブジェクトのシリアライズ（Redisに保存する）
 def serialize_question(question: Question):
-    logger.info(f"◆◆serialize_question関数が呼び出されました")
+    logger.debug(f"◆◆serialize_question関数が呼び出されました")
     return json.dumps({
         "id": question.id,
         "question_text": question.question_text,
@@ -36,7 +36,7 @@ def serialize_question(question: Question):
 
 # 質問オブジェクトのデシリアライズ（キャッシュ再取得）
 def deserialize_question(question_json: str):
-    logger.info(f"◆◆deserialize_question関数が呼び出されました")
+    logger.debug(f"◆◆deserialize_question関数が呼び出されました")
     data = json.loads(question_json)
     return Question(
         id=data["id"],
@@ -53,5 +53,5 @@ def deserialize_question(question_json: str):
 
 # 質問キャッシュのクリア（新しい質問が追加されたとき使用）
 def clear_question_cache(question_id: int):
-    logger.info(f"◆◆clear_question_cache関数が呼び出されました")
+    logger.debug(f"◆◆clear_question_cache関数が呼び出されました")
     redis_client.delete(f"question:{question_id}")

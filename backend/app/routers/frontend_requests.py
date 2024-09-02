@@ -18,6 +18,8 @@ from app.util.advices.get_saved_advices_history import get_saved_advices_history
 from app.util.summary.get_all_saved_summarize_history import get_all_saved_summary_reports
 from app.util.contact_form.post_contact_form import save_contact_to_db  # 新しい関数をインポート
 from datetime import date
+from uuid import UUID
+
 
 router = APIRouter()
 
@@ -46,8 +48,8 @@ def get_selected_member(slack_user_id: str):
 
 # 社員情報の更新(テストまだ)
 @router.put("/selected_employee/{slack_user_id}/")
-def update_employee(slack_user_id: str, employee_update: EmployeeUpdate, db: Session = Depends(get_db)):
-    employee = db.query(Employee).filter(Employee.slack_user_id == slack_user_id).first()
+def update_employee(id: str, employee_update: EmployeeUpdate, db: Session = Depends(get_db)):
+    employee = db.query(Employee).filter(Employee.id == id).first()
 
     if not employee:
         raise HTTPException(status_code=404, detail="指定されたメンバーが見つかりません")
@@ -66,8 +68,8 @@ def update_employee(slack_user_id: str, employee_update: EmployeeUpdate, db: Ses
 
 # 社員情報の削除（テストまだ）
 @router.delete("/selected_employee/{slack_user_id}/")
-def delete_employee(slack_user_id: str, db: Session = Depends(get_db)):
-    employee = db.query(Employee).filter(Employee.slack_user_id == slack_user_id).first()
+def delete_employee(id: str, db: Session = Depends(get_db)):
+    employee = db.query(Employee).filter(Employee.id == id).first()
 
     if not employee:
         raise HTTPException(status_code=404, detail="指定されたメンバーが見つかりません")

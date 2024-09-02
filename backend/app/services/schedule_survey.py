@@ -2,6 +2,7 @@ import os
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.util.career_survey.send_survey_to_all import send_survey_to_employee, send_survey_to_all, get_first_question, cache_questions
+from app.util.slack_api.save_cached_daily_reports import save_cached_daily_reports_to_db
 from app.db.database import SessionLocal
 from pytz import timezone
 from dotenv import load_dotenv
@@ -47,3 +48,13 @@ def schedule_hourly_survey() -> None:
         'cron', minute='*/30'
     )
     scheduler.start()
+
+
+# `save_cached_daily_reports_to_db` を毎日1回、指定の時間に実行するジョブを追加
+def schedule_daily_report_save_to_db():
+    db = SessionLocal()
+    scheduler = BackgroundScheduler(timezone=timezone('Asia/Tokyo'))
+    scheduler.add_job(lambda: save_cached_daily_reports_to_db(SessionLocal()), 'cron', hour=10, minute=10)
+    logger.debug("◆◆日報投稿を保存するスケジュールが設定されました")
+    scheduler.start()
+    logger.debug("◆◆日報投稿を保存するスケジューラが開始されました")
