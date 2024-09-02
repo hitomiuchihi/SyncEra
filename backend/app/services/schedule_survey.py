@@ -1,15 +1,10 @@
 import os
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
-from app.util.career_survey.send_survey_to_all import send_survey_to_all #社員全員にアンケート配信するロジック
-from app.util.career_survey.send_survey_to_all import send_survey_to_employee
+from app.util.career_survey.send_survey_to_all import send_survey_to_employee, send_survey_to_all, get_first_question, cache_questions
 from app.db.database import SessionLocal
-from app.db.models import Question
-from app.util.career_survey.question_cache import serialize_question
-from sqlalchemy.orm import Session
 from pytz import timezone
 from dotenv import load_dotenv
-from redis import Redis
 
 # ロギングの設定
 log_level = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -19,37 +14,12 @@ logger = logging.getLogger(__name__)
 # 環境変数の読み込み
 load_dotenv()
 
-# Redisクライアントの設定
-REDIS_HOST = os.getenv("REDIS_HOST", "redis") # "redis"部分はコンテナでの開発時。ローカルの時はlocalhost
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-redis_client = Redis(host=REDIS_HOST, port=REDIS_PORT)
-
-# 初回の質問を取得するためのヘルパー関数
-# 引数: db (Session): SQLAlchemyのデータベースセッションオブジェクト。
-# 戻り値: Question: データベースから取得した初回の質問オブジェクト。
-def get_first_question(db: Session) -> Question:
-    first_question = db.query(Question).filter(Question.id == 1).first()  # id=1 の質問を初回の質問とみなして取得
-    return first_question
-
-# アンケートの質問をキャッシュに保存する関数
-def cache_questions():
-    db = SessionLocal()
-    try:
-        questions = db.query(Question).all()
-        for question in questions:
-            question_key = f"question:{question.id}"
-            serialized_question = serialize_question(question)
-            redis_client.set(question_key, serialized_question)
-            logger.info(f"キャッシュに質問を保存しました: {question_key}")
-    finally:
-        db.close()
-
 # アンケートの定期配信を定義:
 def schedule_monthly_survey():
-    # 毎日20日12時以降に全員にアンケートを配信する
     scheduler = BackgroundScheduler(timezone=timezone('Asia/Tokyo'))
-    scheduler.add_job(send_survey_to_all, 'cron', day=31, hour=10, minute=30)
-    scheduler.add_job(cache_questions, 'cron', day=31, hour=10, minute=20)
+    # # 毎日20日12時以降に全員にアンケートを配信する
+    # scheduler.add_job(send_survey_to_all, 'cron', day=31, hour=10, minute=30)
+    # scheduler.add_job(cache_questions, 'cron', day=31, hour=10, minute=20)
 
     # 3ヶ月ごとにアンケート送信と質問をキャッシュに保存
     scheduler.add_job(send_survey_to_all, 'cron', month='1,4,7,10', day=1, hour=12, minute=0)

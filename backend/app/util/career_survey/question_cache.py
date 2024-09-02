@@ -2,7 +2,9 @@ import logging
 import os
 import json
 from dotenv import load_dotenv
-from redis import Redis
+from app.db.database import SessionLocal
+from app.db.models import Question
+from sqlalchemy.orm import Session
 from app.db.models import Question
 from app.services.redis_client import redis_client
 
@@ -15,11 +17,6 @@ logging.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelnam
 logger = logging.getLogger(__name__)
 # slack_sdkライブラリのログレベルをINFOに設定
 logging.getLogger("slack_sdk").setLevel(logging.INFO)
-
-# Redisクライアントの設定
-# REDIS_HOST = os.getenv("REDIS_HOST", "redis") # "redis"部分はコンテナでの開発時。ローカルの時はlocalhost
-# REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-# redis_client = redis_client(host=REDIS_HOST, port=REDIS_PORT)
 
 # 質問オブジェクトのシリアライズ（Redisに保存する）
 def serialize_question(question: Question):
