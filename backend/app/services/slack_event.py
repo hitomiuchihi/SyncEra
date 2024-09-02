@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.db.models import DailyReport, TimesTweet
 from app.util.slack_api.get_slack_user_info import get_and_save_slack_users
-from app.util.slack_api.save_cached_daily_reports import save_cached_daily_reports_to_db, cache_daily_report_message
+from app.util.slack_api.save_cached_daily_reports import cache_daily_report_message
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from slackeventsapi import SlackEventAdapter
@@ -62,26 +62,23 @@ def get_and_save_daily_report(event, db: Session):
             if user_id == excluded_user_id:
                 logger.info(f"◆◆ daily_reportチャンネルbotの投稿{user_id}")
                 continue
-            # メッセージをキャッシュに保存
-            cache_daily_report_message(ts, user_id, text)
+            # # メッセージをキャッシュに保存
+            # cache_daily_report_message(ts, user_id, text)
 
-            # # メッセージが存在するかをチェック
-            # existing_message = db.query(DailyReport).filter_by(ts=ts).first()
-            # if existing_message:
-            #     # メッセージが存在する場合、内容を更新
-            #     existing_message.text = text
-            #     logger.debug(f"Message updated: ts={ts}, user_id={user_id}")
-            # else:
-            #     # メッセージが存在しない場合、新規に追加
-            #     message_record = DailyReport(ts=ts, slack_user_id=user_id, text=text)
-            #     db.add(message_record)
-            #     logger.debug(f"Message added: ts={ts}, user_id={user_id}")
-        
-        # # キャッシュされたメッセージをデータベースにバッチ処理で保存
-        # save_cached_daily_reports_to_db(db)
+            # メッセージが存在するかをチェック
+            existing_message = db.query(DailyReport).filter_by(ts=ts).first()
+            if existing_message:
+                # メッセージが存在する場合、内容を更新
+                existing_message.text = text
+                logger.debug(f"Message updated: ts={ts}, user_id={user_id}")
+            else:
+                # メッセージが存在しない場合、新規に追加
+                message_record = DailyReport(ts=ts, slack_user_id=user_id, text=text)
+                db.add(message_record)
+                logger.debug(f"Message added: ts={ts}, user_id={user_id}")
 
-        # # コミットして変更を保存
-        # db.commit()
+        # コミットして変更を保存
+        db.commit()
 
     except SlackApiError as e:
         logger.error("Error fetching users: {}".format(e))

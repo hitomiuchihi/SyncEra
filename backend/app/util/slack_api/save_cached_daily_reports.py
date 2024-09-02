@@ -20,6 +20,7 @@ def cache_daily_report_message(ts: str, user_id: str, text: str):
 
 # 日報投稿のバッチ処理を行う関数
 def save_cached_daily_reports_to_db(db: Session):
+    logger.debug(f"◆◆save_cached_daily_reports_to_db関数が呼び出されました")
     keys = redis_client.keys("daily_report:*")
     for key in keys:
         ts = redis_client.hget(key, "ts")
@@ -27,6 +28,7 @@ def save_cached_daily_reports_to_db(db: Session):
         text = redis_client.hget(key, "text")
 
         # デバッグ用ログを追加して、データの型を確認
+        logger.debug(f"◆◆ts type: {type(ts)}, value: {ts}")  # tsの値を確認
         logger.debug(f"◆◆user_id type: {type(user_id)}, value: {user_id}")
         logger.debug(f"◆◆text type: {type(text)}, value: {text}")
 
