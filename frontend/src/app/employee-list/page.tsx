@@ -7,13 +7,27 @@ import NewEmployeeLink from '@/components/employeelist/NewEmployeeLink';
 import LogoutButton from '@/components/signup_and_login/LogoutButton';
 import { useRouter } from 'next/navigation';
 import { useEmployees } from '../hooks/useEmployees';
+// type Employee = {
+//   id: string;
+//   name: string;
+//   department: string;
+//   role: string;
+//   project: string;
+//   slack_user_id: string;
+//   slack_user_info?: {
+//     id: string;
+//     image_512: string;
+//     name: string;
+//     real_name: string;
+//   };
+// };
+
 type Employee = {
   id: string;
   name: string;
   department: string;
   role: string;
   project: string;
-  slack_user_id: string;
   slack_user_info?: {
     id: string;
     image_512: string;
@@ -80,7 +94,7 @@ export default function EmployeeList() {
                   <p className='text-[17px] text-[#333333] mb-4'>担当案件名: {employee.project}</p>
                   <div className='flex flex-col space-y-4 text-[17px]'>
                     <button
-                      onClick={() => handleViewDetails(employee.slack_user_id)}
+                      onClick={() => handleViewDetails(employee.slack_user_info?.id || '')}
                       className='bg-[#66b2ff] text-white px-4 py-2 rounded-lg font-bold hover:bg-[#003366] transition-colors duration-300 flex items-center justify-center' // justify-center added
                     >
                       <img
@@ -91,7 +105,7 @@ export default function EmployeeList() {
                       日報を見る
                     </button>
                     <button
-                      onClick={() => handleOneOnOneAdvice(employee.slack_user_id)}
+                      onClick={() => handleOneOnOneAdvice(employee.slack_user_info?.id || '')}
                       className='bg-[#66b2ff] text-white text-[17px] px-4 py-2 rounded-lg font-bold hover:bg-[#003366] transition-colors duration-300 flex items-center justify-center' // justify-center added
                     >
                       <img
@@ -102,7 +116,7 @@ export default function EmployeeList() {
                       1on1 アドバイスを見る{' '}
                     </button>
                     <button
-                      onClick={() => handleCareerSurveyResults(employee.slack_user_id)}
+                      onClick={() => handleCareerSurveyResults(employee.slack_user_info?.id || '')}
                       className='bg-[#66b2ff] text-[17px] text-white px-4 py-2 rounded-lg font-bold hover:bg-[#003366] transition-colors duration-300 flex items-center justify-center' // justify-center added
                     >
                       <img
