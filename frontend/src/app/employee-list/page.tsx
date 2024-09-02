@@ -25,7 +25,7 @@ type Employee = {
 export default function EmployeeList() {
   const router = useRouter();
   const { employees } = useEmployees();
-  console.log('employees:', employees);
+
   const handleViewDetails = (slackUserId: string) => {
     console.log('Slack User ID:', slackUserId); // undefind
     try {
