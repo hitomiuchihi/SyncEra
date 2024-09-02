@@ -1,12 +1,12 @@
 'use client';
 
+import AuthRoute from '@/components/auth/AuthRoute';
+import HomeLink from '@/components/employeelist/HomeLink';
+import LogoWhite from '@/components/employeelist/LogoWhite';
+import NewEmployeeLink from '@/components/employeelist/NewEmployeeLink';
+import LogoutButton from '@/components/signup_and_login/LogoutButton';
 import { useRouter } from 'next/navigation';
 import { useEmployees } from '../hooks/useEmployees';
-import AuthRoute from '@/components/auth/AuthRoute';
-import LogoutButton from '@/components/signup_and_login/LogoutButton';
-import HomeLink from '@/components/employeelist/HomeLink';
-import NewEmployeeLink from '@/components/employeelist/NewEmployeeLink';
-import LogoWhite from '@/components/employeelist/LogoWhite';
 type Employee = {
   id: string;
   name: string;
@@ -25,10 +25,11 @@ type Employee = {
 export default function EmployeeList() {
   const router = useRouter();
   const { employees } = useEmployees();
-
+  console.log('employees:', employees);
   const handleViewDetails = (slackUserId: string) => {
+    console.log('Slack User ID:', slackUserId); // undefind
     try {
-      router.push(`/employee-list/summary/${encodeURIComponent(slackUserId)}`);
+      router.push(`/employee-list/summary/${encodeURIComponent(slackUserId)}/`);
     } catch (error) {
       console.error('error');
     }
