@@ -1,10 +1,10 @@
+from .services.fastapi_client import app
 import logging
 import os
 import json
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from app.services.slackApi import get_and_save_daily_report, get_and_save_times_tweet
 from app.util.slack_api.get_slack_user_info import get_and_save_slack_users
@@ -14,11 +14,9 @@ from app.util.career_survey.question_cache import clear_question_cache, deserial
 from app.util.survey_analysis.save_analysis_result import save_survey_result
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-from slack_sdk.errors import SlackApiError
 from app.db.database import get_db
 from app.db.models import Question, UserResponse
 from app.routers import frontend_requests
-# from redis import Redis
 from app.services.redis_client import redis_client
 
 # 環境変数の読み込み
@@ -43,7 +41,7 @@ TWEET_CHANNEL_IDS = os.getenv("TWEET_CHANNEL_IDS", "").split(",")
 slack_client = WebClient(token=SLACK_TOKEN)
 from app.services.stripe import router as stripe_router
 
-app = FastAPI()
+# app = FastAPI()
 
 origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
 app.add_middleware(
